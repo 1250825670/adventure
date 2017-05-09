@@ -64,12 +64,13 @@ void init_rooms() {
 	rooms[i].num_connections = k;
     }
 
-    /* print results to screen */
+    /* print results to screen 
     for (i = 0; i < NUM_ROOMS; i++) {
 	printf("id: %d, name: %s, type: %s, num cns: %d\n",
 		rooms[i].id, rooms[i].name, rooms[i].type, rooms[i].num_connections);
 	print_conns(&rooms[i]);
     }
+    */
 
 }
 
@@ -117,6 +118,7 @@ void create_connections(int connections[NUM_ROOMS][NUM_ROOMS]) {
 	}
     }
 
+    /*
     for (i = 0; i < NUM_ROOMS; i++) {
 	printf("room %d connections: ", i);
 	for (j = 0; j < NUM_ROOMS; j++) {
@@ -124,6 +126,7 @@ void create_connections(int connections[NUM_ROOMS][NUM_ROOMS]) {
 	}
 	printf("\n");
     }
+    */
 }
 
 int check_connections(int connections[NUM_ROOMS][NUM_ROOMS]) {
@@ -152,6 +155,7 @@ void cleanup() {
     }
 }
 
+/*
 void print_conns(struct room* room) {
     printf("rooms connnected to (%s/%d) are:\n", room->name, room->id);
     int i;
@@ -165,7 +169,7 @@ void print_conns(struct room* room) {
     }
     return;
 }
-
+*/
 void create_dir(char* dirname) {
     int result;
 
@@ -204,6 +208,7 @@ void create_files(char* dirname) {
 	strcat(file_path, dirname);
 	strcat(file_path, "/");
 	strcat(file_path, file_name);
+	strcat(file_path, FILESUFFIX);
 
 	fd = open(file_path, O_RDWR | O_CREAT, 0644);
 	if (fd == -1) {

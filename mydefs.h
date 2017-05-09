@@ -41,7 +41,7 @@ int enough_conns(int connections[NUM_ROOMS][NUM_ROOMS], int row);
 int check_connections(int connections[NUM_ROOMS][NUM_ROOMS]);
 void create_connections(int connections[NUM_ROOMS][NUM_ROOMS]);
 void cleanup();
-void print_conns(struct room* room);
+/* void print_conns(struct room* room); */
 void create_dir(char* dirname);
 void create_files(char* dirname);
 
