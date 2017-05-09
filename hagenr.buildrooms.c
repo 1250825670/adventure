@@ -64,7 +64,7 @@ void init_rooms() {
 	rooms[i].num_connections = k;
     }
 
-    /* print results */
+    /* print results to screen */
     for (i = 0; i < NUM_ROOMS; i++) {
 	printf("id: %d, name: %s, type: %s, num cns: %d\n",
 		rooms[i].id, rooms[i].name, rooms[i].type, rooms[i].num_connections);
@@ -105,16 +105,16 @@ void create_connections(int connections[NUM_ROOMS][NUM_ROOMS]) {
 
     tries = 0;
     for (i = 0; i < NUM_ROOMS; i++) {
-        while (!enough_conns(connections, i) && tries < 10) {
+	while (!enough_conns(connections, i) && tries < 10) {
 	    tries++;
-            for (j = i; j < NUM_ROOMS; j++) {
-        	if (randi(0, 1) && i != j) {
-        	    /* printf("setting connection to [%d][%d]\n", i, j); */
-        	    connections[i][j] = 1;
-        	    connections[j][i] = 1;
-        	}
-            }
-        }
+	    for (j = i; j < NUM_ROOMS; j++) {
+		if (randi(0, 1) && i != j) {
+		    /* printf("setting connection to [%d][%d]\n", i, j); */
+		    connections[i][j] = 1;
+		    connections[j][i] = 1;
+		}
+	    }
+	}
     }
 
     for (i = 0; i < NUM_ROOMS; i++) {
@@ -168,12 +168,14 @@ void print_conns(struct room* room) {
 
 void create_dir(char* dirname) {
     int result;
-    int mypid = getpid();
 
-    char cpid[16];
-    memset(cpid, '\0', 16);
+    /* get pid and convert to string */
+    int mypid = getpid();
+    char cpid[MAXLEN];
+    memset(cpid, '\0', MAXLEN);
     sprintf(cpid, "%d", mypid);
 
+    /* create dir, exit if error */
     memset(dirname, '\0', MAXLEN);
     strcat(dirname, DIRPREFIX);
     strcat(dirname, cpid);
@@ -184,7 +186,58 @@ void create_dir(char* dirname) {
     }
 }
 
-// #define FILESUFFIX "_room"
 void create_files(char* dirname) {
+    int i, j, fd;
+    size_t n, len;
+    char file_name[MAXLEN];
+    char file_path[MAXLEN];
+    char tmp[MAXBUFLEN];
 
+    for (i = 0; i < NUM_ROOMS; i++) {
+	/* clean slate */
+	memset(file_path, '\0', MAXLEN);
+	memset(file_name, '\0', MAXLEN);
+	memset(tmp, '\0', MAXBUFLEN);
+
+	/* create and open file, exit if error */
+	strcpy(file_name, rooms[i].name);
+	strcat(file_path, dirname);
+	strcat(file_path, "/");
+	strcat(file_path, file_name);
+
+	fd = open(file_path, O_RDWR | O_CREAT, 0644);
+	if (fd == -1) {
+	    printf("error creating file\n");
+	    exit(1);
+	}
+
+	/* room name */
+	strcat(tmp, name_title);
+	strcat(tmp, rooms[i].name);
+	strcat(tmp, "\n");
+
+	/* room connections */
+	for (j = 0; j < rooms[i].num_connections; j++) {
+	    strcat(tmp, con_title[j]);
+	    strcat(tmp, rooms[i].connected_rooms[j]->name);
+	    strcat(tmp, "\n");
+	}
+
+	/* room type */
+	strcat(tmp, type_title);
+	strcat(tmp, rooms[i].type);
+	strcat(tmp, "\n");
+
+	/* write data to file, exit if not all bytes written */
+	len = strlen(tmp) * sizeof(char);
+	n = write(fd, tmp, len);
+
+	if (n != len) {
+	    printf ("error writing to file\n");
+	    exit(0);
+	}
+
+	close(fd);
+    }
 }
+
