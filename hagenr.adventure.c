@@ -33,10 +33,12 @@ void load_struct();
 void get_newest_dir(char* newest_dir_name);
 void read_files(char* newest_dir_name);
 void play_game();
+void cleanup();
 
 int main() {
     load_struct();
     play_game();
+    cleanup();
     return 0;
 }
 
@@ -185,6 +187,10 @@ void play_game() {
 	printf("\n");
     }
 
+}
+
+void cleanup() {
+    int i, j;
     for (i = 0; i < NUM_ROOMS; i++) {
 	free(rooms[i].name);
 	free(rooms[i].type);
