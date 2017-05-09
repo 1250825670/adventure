@@ -29,10 +29,25 @@ struct room {
 } rooms[NUM_ROOMS];
 
 /* function prototypes */
+void load_struct();
+void get_newest_dir(char* newest_dir_name);
+void read_files(char* newest_dir_name);
+void play_game();
 
 int main() {
+    load_struct();
+    play_game();
+    return 0;
+}
+
+void load_struct () {
+    char newest_dir[MAX_LEN];
+    get_newest_dir(newest_dir);
+    read_files(newest_dir);
+}
+
+void get_newest_dir(char* newest_dir_name) {
     int newest_dir_time = -1;
-    char newest_dir_name[MAX_LEN];
 
     DIR* dp;
     struct dirent* file_in_dir;
@@ -55,8 +70,10 @@ int main() {
 	}
     }
     closedir(dp);
+}
 
-    /* printf("newest dir: %s\n", newest_dir_name); */
+void read_files(char* newest_dir_name) {
+    DIR* dp;
 
     dp = opendir(newest_dir_name);
     if (dp == NULL) {
@@ -64,12 +81,12 @@ int main() {
 	exit(1);
     }
 
+    struct dirent* file_in_dir;
     int fd;
     char file_name[MAX_LEN];
     char data[MAX_LEN];
     char ch;
     int i, j, k, nread, num_cns;
-
 
     i = 0;
     while ((file_in_dir = readdir(dp))) {
@@ -79,7 +96,6 @@ int main() {
 	    strcat(file_name, newest_dir_name);
 	    strcat(file_name, "/");
 	    strcat(file_name, file_in_dir->d_name);
-	    /* printf("%s\n", file_name); */
 
 	    fd = open(file_name, O_RDONLY);
 	    if (fd < 0) {
@@ -97,7 +113,6 @@ int main() {
 		data[k++] = ch;
 	    }
 	    data[k] = '\0';
-	    /* printf("name: '%s'\n", data); */
 	    rooms[i].name = calloc(MAX_LEN, sizeof(char));
 	    strcpy(rooms[i].name, data);
 
@@ -117,14 +132,12 @@ int main() {
 		num_cns++;
 		rooms[i].connected_rooms[j] = calloc(MAX_LEN, sizeof(char));
 		strcpy(rooms[i].connected_rooms[j++], data);
-		/* printf("connection: %s\n", data); */
 		/* still in connections? */
 		nread = read(fd, &ch, 1);
 		lseek(fd, -1, SEEK_CUR);
 		if (ch != CON_TITLE[0]) break;
 	    }
 	    rooms[i].num_connections = num_cns;
-	    /* printf("num_cns: %d\n", num_cns); */
 
 	    /* get the type */
 	    memset(data, '\0', MAX_LEN);
@@ -138,14 +151,17 @@ int main() {
 	    data[k] = '\0';
 	    rooms[i].type = calloc(MAX_LEN, sizeof(char));
 	    strcpy(rooms[i].type, data);
-	    /* printf("type: '%s'\n", data); */
 
 	    i++;
 	    close(fd);
 	}
     }
-
     closedir(dp);
+}
+
+void play_game() {
+    int i, j;
+
     for (i = 0; i < NUM_ROOMS; i++) {
 	printf("name: %s, type: %s, #conns: %d, connections: \n",
 		rooms[i].name, rooms[i].type, rooms[i].num_connections);
@@ -176,5 +192,4 @@ int main() {
 	    free(rooms[i].connected_rooms[j]);
 	}
     }
-    return 0;
 }
