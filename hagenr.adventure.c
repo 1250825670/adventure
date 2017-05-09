@@ -13,6 +13,11 @@
 #define FILE_SUFFIX "_room"
 #define MAX_LEN 128
 #define MAX_BUF_LEN 1024
+#define CON_TITLE "CONNECTION 1: "
+#define NAME_TITLE "ROOM NAME: "
+#define TYPE_TITLE "ROOM TYPE: "
+#define START_TYPE "START_ROOM"
+#define END_TYPE "END_ROOM"
 
 /* globals */
 struct room {
@@ -23,11 +28,7 @@ struct room {
     char* connected_rooms[NUM_ROOMS-1];
 } rooms[NUM_ROOMS];
 
-const char* con_title = "CONNECTION 1: ";
-const char* name_title = "ROOM NAME: ";
-const char* type_title = "ROOM TYPE: ";
-const char* start_type = "START_ROOM";
-const char* end_type = "END_ROOM";
+/* function prototypes */
 
 int main() {
     int newest_dir_time = -1;
@@ -88,7 +89,7 @@ int main() {
 
 	    /* get the name */
 	    memset(data, '\0', MAX_LEN);
-	    lseek(fd, strlen(name_title), SEEK_SET);
+	    lseek(fd, strlen(NAME_TITLE), SEEK_SET);
 	    k = 0;
 	    while (1) {
 		nread = read(fd, &ch, 1);
@@ -106,7 +107,7 @@ int main() {
 	    while (1) {
 		k = 0;
 		memset(data, '\0', MAX_LEN);
-		lseek(fd, strlen(con_title), SEEK_CUR);
+		lseek(fd, strlen(CON_TITLE), SEEK_CUR);
 		while (1) {
 		    nread = read(fd, &ch, 1);
 		    if (ch == '\n') break;
@@ -120,14 +121,14 @@ int main() {
 		/* still in connections? */
 		nread = read(fd, &ch, 1);
 		lseek(fd, -1, SEEK_CUR);
-		if (ch != con_title[0]) break;
+		if (ch != CON_TITLE[0]) break;
 	    }
 	    rooms[i].num_connections = num_cns;
 	    /* printf("num_cns: %d\n", num_cns); */
 
 	    /* get the type */
 	    memset(data, '\0', MAX_LEN);
-	    lseek(fd, strlen(type_title), SEEK_CUR);
+	    lseek(fd, strlen(TYPE_TITLE), SEEK_CUR);
 	    k = 0;
 	    while (1) {
 		nread = read(fd, &ch, 1);
@@ -155,7 +156,7 @@ int main() {
     }
 
     for (i = 0; i < NUM_ROOMS; i++) {
-	if (strstr(start_type, rooms[i].type)) {
+	if (strstr(START_TYPE, rooms[i].type)) {
 	    printf("CURRENT LOCATION: %s \nPOSSIBLE CONNECTIONS: ", rooms[i].name);
 	    for (j = 0; j < rooms[i].num_connections; j++) {
 		if (j < rooms[i].num_connections - 1) {
