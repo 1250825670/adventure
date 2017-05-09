@@ -12,10 +12,10 @@
 #define MIN_CONNS 3
 #define MAX_CONNS 6
 #define NUM_NAMES 10
-#define DIRPREFIX "hagenr.rooms."
-#define FILESUFFIX "_room"
-#define MAXLEN 128
-#define MAXBUFLEN 1024
+#define DIR_PREFIX "hagenr.rooms."
+#define FILE_SUFFIX "_room"
+#define MAX_LEN 128
+#define MAX_BUF_LEN 1024
 
 /* globals */
 struct room {
@@ -26,7 +26,7 @@ struct room {
     struct room* connected_rooms[NUM_ROOMS-1];
 } rooms[NUM_ROOMS];
 
-const char* names[NUM_NAMES] = { "limbo", "lust", "gluttony", "greed", "wrath", 
+const char* names[] = { "limbo", "lust", "gluttony", "greed", "wrath", 
     "heresy", "violence", "fraud", "treachery", "tyrone" };
 const char* types[] = { "START_ROOM", "END_ROOM", "MID_ROOM" };
 const char* con_title[]  = { "CONNECTION 1: ", "CONNECTION 2: ",
@@ -49,7 +49,7 @@ int main() {
     srand(time(NULL));
     init_rooms();
 
-    char dirname[MAXLEN];
+    char dirname[MAX_LEN];
     create_dir(dirname);
     create_files(dirname);
 
@@ -185,13 +185,13 @@ void create_dir(char* dirname) {
 
     /* get pid and convert to string */
     int mypid = getpid();
-    char cpid[MAXLEN];
-    memset(cpid, '\0', MAXLEN);
+    char cpid[MAX_LEN];
+    memset(cpid, '\0', MAX_LEN);
     sprintf(cpid, "%d", mypid);
 
     /* create dir, exit if error */
-    memset(dirname, '\0', MAXLEN);
-    strcat(dirname, DIRPREFIX);
+    memset(dirname, '\0', MAX_LEN);
+    strcat(dirname, DIR_PREFIX);
     strcat(dirname, cpid);
 
     if ((result = mkdir(dirname, 0755)) != 0) {
@@ -203,22 +203,22 @@ void create_dir(char* dirname) {
 void create_files(char* dirname) {
     int i, j, fd;
     size_t n, len;
-    char file_name[MAXLEN];
-    char file_path[MAXLEN];
-    char tmp[MAXBUFLEN];
+    char file_name[MAX_LEN];
+    char file_path[MAX_LEN];
+    char tmp[MAX_BUF_LEN];
 
     for (i = 0; i < NUM_ROOMS; i++) {
 	/* clean slate */
-	memset(file_path, '\0', MAXLEN);
-	memset(file_name, '\0', MAXLEN);
-	memset(tmp, '\0', MAXBUFLEN);
+	memset(file_path, '\0', MAX_LEN);
+	memset(file_name, '\0', MAX_LEN);
+	memset(tmp, '\0', MAX_BUF_LEN);
 
 	/* create and open file, exit if error */
 	strcpy(file_name, rooms[i].name);
 	strcat(file_path, dirname);
 	strcat(file_path, "/");
 	strcat(file_path, file_name);
-	strcat(file_path, FILESUFFIX);
+	strcat(file_path, FILE_SUFFIX);
 
 	fd = open(file_path, O_RDWR | O_CREAT, 0644);
 	if (fd == -1) {
