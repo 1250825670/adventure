@@ -16,6 +16,8 @@
 #define FILE_SUFFIX "_room"
 #define MAX_LEN 128
 #define MAX_BUF_LEN 1024
+#define NAME_TITLE "ROOM NAME: "
+#define TYPE_TITLE "ROOM TYPE: "
 
 /* globals */
 struct room {
@@ -31,8 +33,6 @@ const char* names[] = { "limbo", "lust", "gluttony", "greed", "wrath",
 const char* types[] = { "START_ROOM", "END_ROOM", "MID_ROOM" };
 const char* con_title[]  = { "CONNECTION 1: ", "CONNECTION 2: ",
     "CONNECTION 3: ", "CONNECTION 4: ", "CONNECTION 5: ", "CONNECTION 6: " };
-const char* name_title = "ROOM NAME: ";
-const char* type_title = "ROOM TYPE: ";
 
 /* function prototypes */
 int randi(int lo, int hi);
@@ -227,7 +227,7 @@ void create_files(char* dirname) {
 	}
 
 	/* room name */
-	strcat(tmp, name_title);
+	strcat(tmp, NAME_TITLE);
 	strcat(tmp, rooms[i].name);
 	strcat(tmp, "\n");
 
@@ -239,7 +239,7 @@ void create_files(char* dirname) {
 	}
 
 	/* room type */
-	strcat(tmp, type_title);
+	strcat(tmp, TYPE_TITLE);
 	strcat(tmp, rooms[i].type);
 	strcat(tmp, "\n");
 
