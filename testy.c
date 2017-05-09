@@ -24,26 +24,21 @@ const char* types[] = { "START_ROOM", "END_ROOM", "MID_ROOM" };
 
 /* function prototypes */
 int randi(int lo, int hi);
+void init();
 int enough_conns(int connections[NUM_ROOMS][NUM_ROOMS], int row);
 int check_connections(int connections[NUM_ROOMS][NUM_ROOMS]);
 void create_connections(int connections[NUM_ROOMS][NUM_ROOMS]);
-
-void print_conns(struct room* room) {
-    printf("rooms connnected to (%s/%d) are:\n", room->name, room->id);
-    int i;
-
-    for (i = 0; i < room->num_connections; i++) {
-	if (room->connected_rooms[i]) {
-	    printf(  "(%s/%d)\n", 
-		    room->connected_rooms[i]->name, 
-		    room->connected_rooms[i]->id);
-	}
-    }
-    return;
-}
+void cleanup();
+void print_conns(struct room* room);
 
 int main() {
     srand(time(NULL));
+    init();
+
+    return 0;
+}
+
+void init() {
     int i, j, k, name_num;
 
     int taken[NUM_NAMES];
@@ -103,13 +98,6 @@ int main() {
 	print_conns(&rooms[i]);
     }
 
-    /* free calloc'd strings */
-    for (i = 0; i < NUM_ROOMS; i++) {
-	free(rooms[i].name);
-	free(rooms[i].type);
-    }
-
-    return 0;
 }
 
 /* 
@@ -180,4 +168,27 @@ int check_connections(int connections[NUM_ROOMS][NUM_ROOMS]) {
 	}
     }
     return retval;
+}
+
+void cleanup() {
+    int i;
+    /* free calloc'd strings */
+    for (i = 0; i < NUM_ROOMS; i++) {
+	free(rooms[i].name);
+	free(rooms[i].type);
+    }
+}
+
+void print_conns(struct room* room) {
+    printf("rooms connnected to (%s/%d) are:\n", room->name, room->id);
+    int i;
+
+    for (i = 0; i < room->num_connections; i++) {
+	if (room->connected_rooms[i]) {
+	    printf(  "(%s/%d)\n", 
+		    room->connected_rooms[i]->name, 
+		    room->connected_rooms[i]->id);
+	}
+    }
+    return;
 }
