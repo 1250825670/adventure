@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 /* preprocessor constants */
 #define NUM_ROOMS 7
@@ -30,6 +33,7 @@ int check_connections(int connections[NUM_ROOMS][NUM_ROOMS]);
 void create_connections(int connections[NUM_ROOMS][NUM_ROOMS]);
 void cleanup();
 void print_conns(struct room* room);
+void create_files();
 
 int main() {
     srand(time(NULL));
@@ -192,3 +196,21 @@ void print_conns(struct room* room) {
     }
     return;
 }
+
+void create_files() {
+    int result;
+    int mypid = getpid();
+    char cpid[16];
+    memset(cpid, '\0', 16);
+    sprintf(cpid, "%d", mypid);
+    char dirname[MAXDIRLEN];
+    memset(dirname, '\0', MAXDIRLEN);
+    strcat(dirname, DIRPREFIX);
+    strcat(dirname, cpid);
+
+    if ((result = mkdir(dirname, 0755)) != 0) {
+	printf("error creating directory\n");
+	exit(1);
+    }
+}
+
