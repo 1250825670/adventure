@@ -41,7 +41,8 @@ void read_files(char* newest_dir_name);
 void play_game();
 void cleanup();
 int get_room_details(char* input, char* room_name, char* connectors);
-void *get_time();
+void *set_time();
+void get_time();
 
 int main() {
     int i, j;
@@ -247,7 +248,7 @@ void play_game() {
     memset(path, '\0', MAX_LEN);
 
     pthread_mutex_lock(&lock);
-    tnum = pthread_create(&mythread, NULL, get_time, NULL);
+    tnum = pthread_create(&mythread, NULL, set_time, NULL);
     assert(tnum == 0);
 
     room_type = get_room_details(0, room_name, connectors);
@@ -280,12 +281,12 @@ void play_game() {
 		game_over = 1;
 	    }
 	} else if (strcmp(input, "time") == 0) {
-	    /* use 2 newlines */
 	    pthread_mutex_unlock(&lock);
 	    pthread_join(mythread, NULL);
 	    pthread_mutex_lock(&lock);
-	    tnum = pthread_create(&mythread, NULL, get_time, NULL);
+	    tnum = pthread_create(&mythread, NULL, set_time, NULL);
 	    assert(tnum == 0);
+	    get_time();
 	} else {
 	    printf("HUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN.\n\n");
 	}
@@ -296,7 +297,7 @@ void play_game() {
 }
 
 /* write time to a file */
-void *get_time() {
+void *set_time() {
     pthread_mutex_lock(&lock);
     int i;
     time_t rawtime;
@@ -345,3 +346,11 @@ void cleanup() {
     pthread_mutex_destroy(&lock);
 }
 
+void get_time() {
+    FILE *fin;
+    char timestr[MAX_LEN];
+    fin = fopen(TIME_FILE, "r");
+    fgets(timestr, MAX_LEN, fin);
+    printf("%s\n", timestr);
+    fclose(fin);
+}
