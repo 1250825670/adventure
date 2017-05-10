@@ -265,7 +265,7 @@ void play_game() {
 	    strcat(path, "\n");
 	    if (room_type == 1) {
 		printf("YOU HAVE FOUND THE END ROOM. CONGRATULATIONS!\n");
-		printf("YOU TOOK %d STEPS. YOUR PATH TO VICTORY WAS:\n", steps);
+		printf("YOU TOOK %d %s. YOUR PATH TO VICTORY WAS:\n", steps, steps==1?"STEP":"STEPS");
 		printf("%s", path);
 		game_over = 1;
 	    }
