@@ -8,6 +8,7 @@
 #include <dirent.h>
 #include <pthread.h>
 #include <assert.h>
+#include <ctype.h>
 
 /* preprocessor constants */
 #define NUM_ROOMS 7
@@ -20,6 +21,7 @@
 #define END_TYPE "END_ROOM"
 #define PROMPT1 "CURRENT LOCATION: "
 #define PROMPT2 "POSSIBLE CONNECTIONS: "
+#define TIME_FILE "currentTime.txt"
 
 /* globals */
 struct room {
@@ -293,11 +295,41 @@ void play_game() {
     input = NULL;
 }
 
+/* write time to a file */
 void *get_time() {
     pthread_mutex_lock(&lock);
-    /* write time to a file */
-    printf("here's the time\n\n");
+    int i;
+    time_t rawtime;
+    struct tm * timeinfo;
+    char buf[80];
+    memset(buf, '\0', 80);
+
+    time (&rawtime);
+    timeinfo = localtime (&rawtime);
+
+    strftime (buf, 80, "%l:%M%p, %A, %B %e, %G", timeinfo);
+
+    i = 0;
+    if (buf[0] == ' ') {
+	while (buf[i]) {
+	    buf[i] = buf[i+1];
+	    i++;
+	}
+    }
+    buf[i] = '\0';
+
+    i = 0;
+    while (buf[i]) {
+	if (i < 8 && (buf[i] == 'A' || buf[i] == 'P' || buf[i] == 'M'))
+	    buf[i] = tolower(buf[i]);
+	i++;
+    }
+
+    FILE *fout = fopen(TIME_FILE, "w");
+    fprintf(fout, "%s\n", buf);
     pthread_mutex_unlock(&lock);
+    fclose(fout);
+
     return NULL;
 }
 
