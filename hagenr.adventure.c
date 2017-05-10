@@ -267,7 +267,7 @@ void play_game() {
 		printf("%s", path);
 		game_over = 1;
 	    }
-	} else if (strstr(input, "time")) {
+	} else if (strcmp(input, "time") == 0) {
 	    printf("getting the time\n\n");
 	} else {
 	    printf("HUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN.\n\n");
