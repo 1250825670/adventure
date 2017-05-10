@@ -256,6 +256,7 @@ void play_game() {
 	num_chars = getline(&input, &buf_size, stdin);
 	input[num_chars-1] = '\0';
 	/* printf("you entered: %s\n", input); */
+	printf("\n");
 
 	if (strstr(connectors, input)) {
 	    room_type = get_room_details(input, room_name, connectors);
@@ -273,7 +274,7 @@ void play_game() {
 	} else {
 	    printf("HUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN.\n");
 	}
-	printf("endofwhile\n");
+	printf("\n");
     }
 
     free(input);
@@ -290,3 +291,4 @@ void cleanup() {
 	}
     }
 }
+
