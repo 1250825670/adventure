@@ -34,6 +34,9 @@ void get_newest_dir(char* newest_dir_name);
 void read_files(char* newest_dir_name);
 void play_game();
 void cleanup();
+int get_start_room();
+int get_room();
+void reprint_room(int idx);
 
 int main() {
     load_struct();
@@ -161,21 +164,12 @@ void read_files(char* newest_dir_name) {
     closedir(dp);
 }
 
-void play_game() {
+int get_room(char* room_name) {
     int i, j;
 
     for (i = 0; i < NUM_ROOMS; i++) {
-	printf("name: %s, type: %s, #conns: %d, connections: \n",
-		rooms[i].name, rooms[i].type, rooms[i].num_connections);
-	for (j = 0; j < rooms[i].num_connections; j++) {
-	    printf("%s ", rooms[i].connected_rooms[j]);
-	}
-	printf("\n");
-    }
-
-    for (i = 0; i < NUM_ROOMS; i++) {
-	if (strstr(START_TYPE, rooms[i].type)) {
-	    printf("CURRENT LOCATION: %s \nPOSSIBLE CONNECTIONS: ", rooms[i].name);
+	if (strstr(room_name, rooms[i].name)) {
+	    printf("\nCURRENT LOCATION: %s \nPOSSIBLE CONNECTIONS: ", rooms[i].name);
 	    for (j = 0; j < rooms[i].num_connections; j++) {
 		if (j < rooms[i].num_connections - 1) {
 		    printf("%s, ", rooms[i].connected_rooms[j]);
@@ -183,10 +177,86 @@ void play_game() {
 		    printf("%s.", rooms[i].connected_rooms[j]);
 		}
 	    }
+	    break;
 	}
-	printf("\n");
+    }
+    printf("\n\n");
+    return i;
+}
+
+int get_start_room() {
+    int i, j;
+
+    for (i = 0; i < NUM_ROOMS; i++) {
+	if (strstr(START_TYPE, rooms[i].type)) {
+	    printf("\nCURRENT LOCATION: %s \nPOSSIBLE CONNECTIONS: ", rooms[i].name);
+	    for (j = 0; j < rooms[i].num_connections; j++) {
+		if (j < rooms[i].num_connections - 1) {
+		    printf("%s, ", rooms[i].connected_rooms[j]);
+		} else {
+		    printf("%s.", rooms[i].connected_rooms[j]);
+		}
+	    }
+	    break;
+	}
+    }
+    printf("\n\n");
+    return i;
+}
+
+void reprint_room(int idx) {
+    int j;
+
+    printf("\nCURRENT LOCATION: %s \nPOSSIBLE CONNECTIONS: ", rooms[idx].name);
+    for (j = 0; j < rooms[idx].num_connections; j++) {
+	if (j < rooms[idx].num_connections - 1) {
+	    printf("%s, ", rooms[idx].connected_rooms[j]);
+	} else {
+	    printf("%s.", rooms[idx].connected_rooms[j]);
+	}
+    }
+    printf("\n\n");
+}
+
+void play_game() {
+    int i, j, num_chars, steps, idx, match;
+    char* path[NUM_ROOMS];
+    char* input;
+    size_t buf_size = 0;
+
+    steps = 0;
+    while (1) {
+	match = 0;
+	if (steps == 0) idx = get_start_room();
+	printf("WHERE TO? >");
+	num_chars = getline(&input, &buf_size, stdin);
+	input[num_chars-1] = '\0';
+	/* printf("you entered: %s\n", input); */
+
+	for (i = 0; i < rooms[idx].num_connections; i++) {
+	    if (strstr(input, rooms[idx].connected_rooms[i])) {
+		idx = get_room(input);
+		steps++;
+		match = 1;
+		break;
+	    }
+	}
+	if (!match) {
+	    printf("\nHUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN.\n\n");
+	}
     }
 
+    free(input);
+    input = NULL;
+
+    // for (i = 0; i < NUM_ROOMS; i++) {
+    //     printf("name: %s, type: %s, #conns: %d, connections: \n",
+    //     	rooms[i].name, rooms[i].type, rooms[i].num_connections);
+    //     for (j = 0; j < rooms[i].num_connections; j++) {
+    //         printf("%s ", rooms[i].connected_rooms[j]);
+    //     }
+    //     printf("\n");
+    // }
 }
 
 void cleanup() {
