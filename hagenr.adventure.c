@@ -10,9 +10,7 @@
 /* preprocessor constants */
 #define NUM_ROOMS 7
 #define DIR_PREFIX "hagenr.rooms."
-#define FILE_SUFFIX "_room"
 #define MAX_LEN 128
-#define MAX_BUF_LEN 1024
 #define CON_TITLE "CONNECTION 1: "
 #define NAME_TITLE "ROOM NAME: "
 #define TYPE_TITLE "ROOM TYPE: "
@@ -270,11 +268,10 @@ void play_game() {
 		game_over = 1;
 	    }
 	} else if (strstr(input, "time")) {
-	    printf("getting the time\n");
+	    printf("getting the time\n\n");
 	} else {
-	    printf("HUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN.\n");
+	    printf("HUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN.\n\n");
 	}
-	printf("\n");
     }
 
     free(input);
