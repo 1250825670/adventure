@@ -169,6 +169,7 @@ int get_room(char* room_name) {
 
     for (i = 0; i < NUM_ROOMS; i++) {
 	if (strstr(room_name, rooms[i].name)) {
+	    /* if (rooms[i */
 	    printf("\nCURRENT LOCATION: %s \nPOSSIBLE CONNECTIONS: ", rooms[i].name);
 	    for (j = 0; j < rooms[i].num_connections; j++) {
 		if (j < rooms[i].num_connections - 1) {
@@ -242,7 +243,7 @@ void play_game() {
 	    }
 	}
 	if (!match) {
-	    printf("\nHUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN.\n\n");
+	    printf("\nHUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN.\n");
 	}
     }
 
