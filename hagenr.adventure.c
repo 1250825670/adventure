@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <pthread.h>
+#include <assert.h>
 
 /* preprocessor constants */
 #define NUM_ROOMS 7
@@ -28,6 +30,8 @@ struct room {
     char* connected_rooms[NUM_ROOMS-1];
 } rooms[NUM_ROOMS];
 
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
 /* function prototypes */
 void load_struct();
 void get_newest_dir(char* newest_dir_name);
@@ -35,6 +39,7 @@ void read_files(char* newest_dir_name);
 void play_game();
 void cleanup();
 int get_room_details(char* input, char* room_name, char* connectors);
+void *get_time();
 
 int main() {
     int i, j;
@@ -226,17 +231,22 @@ int get_room_details(char* input, char* room_name, char* connectors) {
    show huh msg
    */
 void play_game() {
-    int num_chars, steps, game_over, room_type;
+    int num_chars, steps, game_over, room_type, tnum;
     char room_name[MAX_LEN];
     char connectors[MAX_LEN];
     char output[MAX_LEN];
     char path[MAX_LEN];
     char* input = NULL;
     size_t buf_size = 0;
+    pthread_t mythread;
 
     steps = 0;
     game_over = 0; 
     memset(path, '\0', MAX_LEN);
+
+    pthread_mutex_lock(&lock);
+    tnum = pthread_create(&mythread, NULL, get_time, NULL);
+    assert(tnum == 0);
 
     room_type = get_room_details(0, room_name, connectors);
     while (!game_over) {
@@ -268,7 +278,12 @@ void play_game() {
 		game_over = 1;
 	    }
 	} else if (strcmp(input, "time") == 0) {
-	    printf("getting the time\n\n");
+	    /* use 2 newlines */
+	    pthread_mutex_unlock(&lock);
+	    pthread_join(mythread, NULL);
+	    pthread_mutex_lock(&lock);
+	    tnum = pthread_create(&mythread, NULL, get_time, NULL);
+	    assert(tnum == 0);
 	} else {
 	    printf("HUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN.\n\n");
 	}
@@ -276,6 +291,14 @@ void play_game() {
 
     free(input);
     input = NULL;
+}
+
+void *get_time() {
+    pthread_mutex_lock(&lock);
+    /* write time to a file */
+    printf("here's the time\n\n");
+    pthread_mutex_unlock(&lock);
+    return NULL;
 }
 
 void cleanup() {
@@ -287,5 +310,6 @@ void cleanup() {
 	    free(rooms[i].connected_rooms[j]);
 	}
     }
+    pthread_mutex_destroy(&lock);
 }
 
