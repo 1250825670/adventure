@@ -18,6 +18,8 @@
 #define TYPE_TITLE "ROOM TYPE: "
 #define START_TYPE "START_ROOM"
 #define END_TYPE "END_ROOM"
+#define PROMPT1 "CURRENT LOCATION: "
+#define PROMPT2 "POSSIBLE CONNECTIONS: "
 
 /* globals */
 struct room {
@@ -34,12 +36,19 @@ void get_newest_dir(char* newest_dir_name);
 void read_files(char* newest_dir_name);
 void play_game();
 void cleanup();
-int get_start_room();
-int get_room();
-void reprint_room(int idx);
+int get_room_details(char* input, char* room_name, char* connectors);
 
 int main() {
+    int i, j;
     load_struct();
+    /* for (i = 0; i < NUM_ROOMS; i++) { */
+	/* printf("name: %s, type: %s, #conns: %d, connections: \n", */
+		/* rooms[i].name, rooms[i].type, rooms[i].num_connections); */
+	/* for (j = 0; j < rooms[i].num_connections; j++) { */
+	    /* printf("%s ", rooms[i].connected_rooms[j]); */
+	/* } */
+	/* printf("\n"); */
+    /* } */
     play_game();
     cleanup();
     return 0;
@@ -118,7 +127,7 @@ void read_files(char* newest_dir_name) {
 		data[k++] = ch;
 	    }
 	    data[k] = '\0';
-	    rooms[i].name = calloc(MAX_LEN, sizeof(char));
+	    rooms[i].name = calloc(k, sizeof(char));
 	    strcpy(rooms[i].name, data);
 
 	    /* get the connections */
@@ -135,7 +144,7 @@ void read_files(char* newest_dir_name) {
 		}
 		data[k] = '\0';
 		num_cns++;
-		rooms[i].connected_rooms[j] = calloc(MAX_LEN, sizeof(char));
+		rooms[i].connected_rooms[j] = calloc(k, sizeof(char));
 		strcpy(rooms[i].connected_rooms[j++], data);
 		/* still in connections? */
 		nread = read(fd, &ch, 1);
@@ -154,7 +163,7 @@ void read_files(char* newest_dir_name) {
 		data[k++] = ch;
 	    }
 	    data[k] = '\0';
-	    rooms[i].type = calloc(MAX_LEN, sizeof(char));
+	    rooms[i].type = calloc(k, sizeof(char));
 	    strcpy(rooms[i].type, data);
 
 	    i++;
@@ -164,100 +173,111 @@ void read_files(char* newest_dir_name) {
     closedir(dp);
 }
 
-int get_room(char* room_name) {
-    int i, j;
+int get_room_details(char* input, char* room_name, char* connectors) {
+    int i, j, retval;
 
-    for (i = 0; i < NUM_ROOMS; i++) {
-	if (strstr(room_name, rooms[i].name)) {
-	    /* if (rooms[i */
-	    printf("\nCURRENT LOCATION: %s \nPOSSIBLE CONNECTIONS: ", rooms[i].name);
-	    for (j = 0; j < rooms[i].num_connections; j++) {
-		if (j < rooms[i].num_connections - 1) {
-		    printf("%s, ", rooms[i].connected_rooms[j]);
-		} else {
-		    printf("%s.", rooms[i].connected_rooms[j]);
+    memset(room_name, '\0', MAX_LEN);
+    memset(connectors, '\0', MAX_LEN);
+    retval = 0;
+
+    if (!input) {
+	for (i = 0; i < NUM_ROOMS; i++) {
+	    if (strstr(START_TYPE, rooms[i].type)) {
+		strcpy(room_name, rooms[i].name);
+		for (j = 0; j < rooms[i].num_connections; j++) {
+		    strcat(connectors, rooms[i].connected_rooms[j]);
+		    strcat(connectors, ", ");
 		}
+		break;
 	    }
-	    break;
 	}
-    }
-    printf("\n\n");
-    return i;
-}
-
-int get_start_room() {
-    int i, j;
-
-    for (i = 0; i < NUM_ROOMS; i++) {
-	if (strstr(START_TYPE, rooms[i].type)) {
-	    printf("\nCURRENT LOCATION: %s \nPOSSIBLE CONNECTIONS: ", rooms[i].name);
-	    for (j = 0; j < rooms[i].num_connections; j++) {
-		if (j < rooms[i].num_connections - 1) {
-		    printf("%s, ", rooms[i].connected_rooms[j]);
-		} else {
-		    printf("%s.", rooms[i].connected_rooms[j]);
+    } else {
+	for (i = 0; i < NUM_ROOMS; i++) {
+	    if (strstr(input, rooms[i].name)) {
+		strcpy(room_name, rooms[i].name);
+		if (strstr(END_TYPE, rooms[i].type)) retval = 1;
+		for (j = 0; j < rooms[i].num_connections; j++) {
+		    strcat(connectors, rooms[i].connected_rooms[j]);
+		    strcat(connectors, ", ");
 		}
+		break;
 	    }
-	    break;
 	}
     }
-    printf("\n\n");
-    return i;
+    i = strlen(connectors) - 2;
+    connectors[i] = '.';
+    return retval;
 }
 
-void reprint_room(int idx) {
-    int j;
-
-    printf("\nCURRENT LOCATION: %s \nPOSSIBLE CONNECTIONS: ", rooms[idx].name);
-    for (j = 0; j < rooms[idx].num_connections; j++) {
-	if (j < rooms[idx].num_connections - 1) {
-	    printf("%s, ", rooms[idx].connected_rooms[j]);
-	} else {
-	    printf("%s.", rooms[idx].connected_rooms[j]);
-	}
-    }
-    printf("\n\n");
-}
-
+/*
+   get starting room details
+   while(game_not_over)
+   display room and connectors
+   prompt
+   get user input
+   if input == time
+   show time
+   else if input == connecting room
+   get room details
+   if room is end
+   show winning message, #steps, path
+   end game
+   else
+   steps++, append room to path
+   else
+   show huh msg
+   */
 void play_game() {
-    int i, j, num_chars, steps, idx, match;
-    char* path[NUM_ROOMS];
-    char* input;
+    int num_chars, steps, game_over, room_type;
+    char room_name[MAX_LEN];
+    char connectors[MAX_LEN];
+    char output[MAX_LEN];
+    char path[MAX_LEN];
+    char* input = NULL;
     size_t buf_size = 0;
 
     steps = 0;
-    while (1) {
-	match = 0;
-	if (steps == 0) idx = get_start_room();
+    game_over = 0; 
+    memset(path, '\0', MAX_LEN);
+
+    room_type = get_room_details(0, room_name, connectors);
+    while (!game_over) {
+
+	memset(output, '\0', MAX_LEN);
+	strcat(output, PROMPT1);
+	strcat(output, room_name);
+	printf("%s\n", output);
+	memset(output, '\0', MAX_LEN);
+	strcat(output, PROMPT2);
+	strcat(output, connectors);
+	printf("%s\n", output);
+
 	printf("WHERE TO? >");
 	num_chars = getline(&input, &buf_size, stdin);
 	input[num_chars-1] = '\0';
 	/* printf("you entered: %s\n", input); */
 
-	for (i = 0; i < rooms[idx].num_connections; i++) {
-	    if (strstr(input, rooms[idx].connected_rooms[i])) {
-		idx = get_room(input);
-		steps++;
-		match = 1;
-		break;
+	if (strstr(connectors, input)) {
+	    room_type = get_room_details(input, room_name, connectors);
+	    steps++;
+	    strcat(path, room_name);
+	    strcat(path, "\n");
+	    if (room_type == 1) {
+		printf("YOU HAVE FOUND THE END ROOM. CONGRATULATIONS!\n");
+		printf("YOU TOOK %d STEPS. YOUR PATH TO VICTORY WAS:\n", steps);
+		printf("%s", path);
+		game_over = 1;
 	    }
+	} else if (strstr(input, "time")) {
+	    printf("getting the time\n");
+	} else {
+	    printf("HUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN.\n");
 	}
-	if (!match) {
-	    printf("\nHUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN.\n");
-	}
+	printf("endofwhile\n");
     }
 
     free(input);
     input = NULL;
-
-    // for (i = 0; i < NUM_ROOMS; i++) {
-    //     printf("name: %s, type: %s, #conns: %d, connections: \n",
-    //     	rooms[i].name, rooms[i].type, rooms[i].num_connections);
-    //     for (j = 0; j < rooms[i].num_connections; j++) {
-    //         printf("%s ", rooms[i].connected_rooms[j]);
-    //     }
-    //     printf("\n");
-    // }
 }
 
 void cleanup() {
