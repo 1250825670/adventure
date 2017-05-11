@@ -1,3 +1,12 @@
+/*
+ * author: ron hagen, cs 344-400
+ * program2: hagenr.buildrooms.c
+ * description: creates an array of 7 room struts with randomly assigned names,
+ * randomly assigned room types, and a randomly number of inter-room
+ * connections. a new directory is created with the prefix "hagenr.rooms." and
+ * a suffix of the PID. then each struct is written to a separate file. only 
+ * low-level file functions are used.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,7 +53,7 @@ void cleanup();
 void create_dir(char* dirname);
 void create_files(char* dirname);
 
-
+/* calls three functions as outlined in description */
 int main() {
     srand(time(NULL));
     init_rooms();
@@ -56,13 +65,27 @@ int main() {
     return 0;
 }
 
+/*
+ * void init_rooms()
+ * loops thru the array of structs and does the following for each room:
+ *  1. assigns an id 
+ *  2. assigns a name and a default type. picks a random index of the names 
+ *     global array, assigns that name to the room, and marks that index as
+ *     'taken'. all rooms at this point are of type mid
+ *  3. randomly assigns a start and end room type
+ *  4. randomly assigns between 3 and 6 inter-room connections. a 1 is a
+ *     connection, a zero is no connection. there is a loop with 'check
+ *     connections' that ensures the proper number of connections in the matrix
+ */
 void init_rooms() {
     int i, j, k, name_num;
 
+    /* to keep track of taken names */
     int taken[NUM_NAMES];
     for (i = 0; i < NUM_NAMES; i++)
 	taken[i] = 0;
 
+    /* adjacency matrix */
     int connections[NUM_ROOMS][NUM_ROOMS];
 
     /* assign name, default type */
@@ -111,6 +134,7 @@ void init_rooms() {
 }
 
 /* 
+ * int randi(int lo, int hi)
  * return a value in range [lo, hi]
  * from cs 475 
  */
@@ -121,7 +145,12 @@ int randi(int lo, int hi) {
     return (int)(low + r * (high - low) / (float)RAND_MAX);
 }
 
-/* are there enough connections */
+/* 
+ * int enough_conns(int connections[NUM_ROOMS][NUM_ROOMS], int row)
+ * params: 2D array of ints (adj matrix) and which row to check
+ * loops through the row keeping a running total of 1's (a connection)
+ * returns 1 if the row has enough connections, else 0
+ */
 int enough_conns(int connections[NUM_ROOMS][NUM_ROOMS], int row) {
     int j, conns;
     conns = 0;
@@ -132,6 +161,15 @@ int enough_conns(int connections[NUM_ROOMS][NUM_ROOMS], int row) {
     return (conns >= MIN_CONNS && conns <= MAX_CONNS);
 }
 
+/*
+ * void create_connections(int connections[NUM_ROOMS][NUM_ROOMS]) 
+ * params: 2D array of ints (adj matrix)
+ * initializes the array to 0's, then tries 10 times to assign the correct
+ * number of connections for each room. the 'tries' is a way to break out of
+ * the loop when the rows towards the bottom of the matrix are blocked from
+ * ever having enough connections. basically, the loop in the init function
+ * with check connection will ensure the matrix is correct.
+ */
 void create_connections(int connections[NUM_ROOMS][NUM_ROOMS]) {
     int i, j, tries;
 
@@ -140,6 +178,7 @@ void create_connections(int connections[NUM_ROOMS][NUM_ROOMS]) {
 	for (j = 0; j < NUM_ROOMS; j++)
 	    connections[i][j] = 0;
 
+    /* since the graph is undirected, assign conns symmetrically */
     tries = 0;
     for (i = 0; i < NUM_ROOMS; i++) {
 	while (!enough_conns(connections, i) && tries < 10) {
@@ -154,6 +193,12 @@ void create_connections(int connections[NUM_ROOMS][NUM_ROOMS]) {
     }
 }
 
+/*
+ * int check_connections(int connections[NUM_ROOMS][NUM_ROOMS])
+ * params: 2D array of ints (adj matrix)
+ * checks the matrix row-by-row to ensure the proper number of connections.
+ * returns 1 if all ok, else returns 0 when the first improper row is found
+ */
 int check_connections(int connections[NUM_ROOMS][NUM_ROOMS]) {
     int i, j, retval, total_cns;
 
@@ -171,6 +216,10 @@ int check_connections(int connections[NUM_ROOMS][NUM_ROOMS]) {
     return retval;
 }
 
+/*
+ * void cleanup()
+ * release all heap memory
+ */
 void cleanup() {
     int i;
     /* free calloc'd strings */
@@ -180,6 +229,12 @@ void cleanup() {
     }
 }
 
+/*
+ * void create_dir(char* dirname)
+ * params: pointer to an array for the directory name
+ * creates a directory with the name composed of the predefined prefix and
+ * the PID suffix, with the permissions set to 755
+ */
 void create_dir(char* dirname) {
     int result;
 
@@ -199,7 +254,16 @@ void create_dir(char* dirname) {
 	exit(1);
     }
 }
-
+/*
+ * void create_files(char* dirname) 
+ * params: pointer to an array with the directory name
+ * loops thru the array of room structs, creating a file for each room:
+ * 1. each file is created in the directory with 644 permissions 
+ * 2. each file is named with the room name and the suffix "_room"
+ * 3. one char array is created with each struct data member separated by
+ *    a newline
+ * 4. that array is written to the file
+ */
 void create_files(char* dirname) {
     int i, j, fd;
     size_t n, len;
