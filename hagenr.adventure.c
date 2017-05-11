@@ -5,10 +5,9 @@
  * through connecting rooms to the end. creates the maze by reading files with
  * low-level c functions and loading the data into an array of room structs.
  * game play begins with the display of the starting room. the loop starts by 
- * prompting the user to enter the connecting room to move to and ends when
- * the user enters the end room. the number of rooms and the path taken are
- * displayed before the program ends. the user can also get the time of day (from
- * a different thread). 
+ * prompting the user to enter the connecting room to move to, and ends when
+ * the user enters the 'end room'. the number of rooms and the path taken are
+ * then displayed . the user can also get the time of day (from a diff thread).
  */
 #include <stdio.h>
 #include <stdlib.h>
