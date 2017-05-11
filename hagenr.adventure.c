@@ -1,3 +1,15 @@
+/*
+ * author: ron hagen, cs 344-400
+ * program2: hagenr.adventure.c
+ * description: a maze game where the user starts in a room and must navigate
+ * through connecting rooms to the end. creates the maze by reading files with
+ * low-level c functions and loading the data into an array of room structs.
+ * game play begins with the display of the starting room. the loop starts by 
+ * prompting the user to enter the connecting room to move to and ends when
+ * the user enters the end room. the number of rooms and the path taken are
+ * displayed before the program ends. the user can also get the time of day (from
+ * a different thread). 
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,16 +57,7 @@ void *set_time();
 void get_time();
 
 int main() {
-    int i, j;
     load_struct();
-    /* for (i = 0; i < NUM_ROOMS; i++) { */
-	/* printf("name: %s, type: %s, #conns: %d, connections: \n", */
-		/* rooms[i].name, rooms[i].type, rooms[i].num_connections); */
-	/* for (j = 0; j < rooms[i].num_connections; j++) { */
-	    /* printf("%s ", rooms[i].connected_rooms[j]); */
-	/* } */
-	/* printf("\n"); */
-    /* } */
     play_game();
     cleanup();
     return 0;
