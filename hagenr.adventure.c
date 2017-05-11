@@ -56,6 +56,7 @@ int get_room_details(char* input, char* room_name, char* connectors);
 void *set_time();
 void get_time();
 
+/* calls functions as described in the opening comment */
 int main() {
     load_struct();
     play_game();
@@ -63,15 +64,25 @@ int main() {
     return 0;
 }
 
+/*
+ * void load_struct ()
+ * wrapper for get_newest_dir and read_files
+ */
 void load_struct () {
     char newest_dir[MAX_LEN];
     get_newest_dir(newest_dir);
     read_files(newest_dir);
 }
 
+/*
+ * void get_newest_dir(char* newest_dir_name) 
+ * params: pointer to a character array for the newest directory with the
+ * specified prefix. based on code presented in lecture, opens the current 
+ * dir and loops thru all subdirectories to find the one with the most recent
+ * modification date-time.
+ */
 void get_newest_dir(char* newest_dir_name) {
     int newest_dir_time = -1;
-
     DIR* dp;
     struct dirent* file_in_dir;
     struct stat dir_attributes;
@@ -82,10 +93,13 @@ void get_newest_dir(char* newest_dir_name) {
 	exit(1);
     }
 
+    /* loop thru all subdirectories */
     while ((file_in_dir = readdir(dp)) != NULL) {
+	/* we found a dir that matches */
 	if (strstr(file_in_dir->d_name, DIR_PREFIX) != NULL) {
 	    stat(file_in_dir->d_name, &dir_attributes);
 	    if ((int)dir_attributes.st_mtime > newest_dir_time) {
+		/* if it's the most recently mod'd, copy the name */
 		newest_dir_time = (int) dir_attributes.st_mtime;
 		memset(newest_dir_name, '\0', MAX_LEN);
 		strcpy(newest_dir_name, file_in_dir->d_name);
@@ -95,6 +109,13 @@ void get_newest_dir(char* newest_dir_name) {
     closedir(dp);
 }
 
+/*
+ * void read_files(char* newest_dir_name)
+ * params: pointer to the char array with the newest dir
+ * opens each file in the directory (except the '.' & '..') while looping thru
+ * the array of structs reads the data by character into a temp array which is 
+ * then copied into the struct data member. uses low-level c functions
+ */
 void read_files(char* newest_dir_name) {
     DIR* dp;
 
@@ -120,13 +141,14 @@ void read_files(char* newest_dir_name) {
 	    strcat(file_name, "/");
 	    strcat(file_name, file_in_dir->d_name);
 
+	    /* open the file for reading */
 	    fd = open(file_name, O_RDONLY);
 	    if (fd < 0) {
 		perror("failed to open file");
 		exit(1);
 	    }
 
-	    /* get the name */
+	    /* move past the data header & copy the name */
 	    memset(data, '\0', MAX_LEN);
 	    lseek(fd, strlen(NAME_TITLE), SEEK_SET);
 	    k = 0;
@@ -139,7 +161,8 @@ void read_files(char* newest_dir_name) {
 	    rooms[i].name = calloc(k, sizeof(char));
 	    strcpy(rooms[i].name, data);
 
-	    /* get the connections */
+	    /* while on lines that start with 'CONNECTION...' */
+	    /* move past the data header and copy the connections */
 	    num_cns = 0;
 	    j = 0;
 	    while (1) {
@@ -152,6 +175,7 @@ void read_files(char* newest_dir_name) {
 		    data[k++] = ch;
 		}
 		data[k] = '\0';
+		/* get the # of connections while we're here */
 		num_cns++;
 		rooms[i].connected_rooms[j] = calloc(k, sizeof(char));
 		strcpy(rooms[i].connected_rooms[j++], data);
@@ -162,7 +186,7 @@ void read_files(char* newest_dir_name) {
 	    }
 	    rooms[i].num_connections = num_cns;
 
-	    /* get the type */
+	    /* on the last line of file, move past the hdr and copy type */
 	    memset(data, '\0', MAX_LEN);
 	    lseek(fd, strlen(TYPE_TITLE), SEEK_CUR);
 	    k = 0;
@@ -175,6 +199,7 @@ void read_files(char* newest_dir_name) {
 	    rooms[i].type = calloc(k, sizeof(char));
 	    strcpy(rooms[i].type, data);
 
+	    /* move to next struct and close this file */
 	    i++;
 	    close(fd);
 	}
@@ -182,6 +207,16 @@ void read_files(char* newest_dir_name) {
     closedir(dp);
 }
 
+/*
+ * int get_room_details(char* input, char* room_name, char* connectors)
+ * params: name of room entered by user, pointers to array for room name (only
+ * needed b/c start room input is null), array for connectors.
+ * returns 1 if room is the end room, else 0
+ * 1st time this is called, the input is null and we search for the start room.
+ * once it's found load the name and connectors into respective arrays. all
+ * other times, its called with the user input and the search is for a matching
+ * room name.
+ */
 int get_room_details(char* input, char* room_name, char* connectors) {
     int i, j, retval;
 
@@ -189,18 +224,22 @@ int get_room_details(char* input, char* room_name, char* connectors) {
     memset(connectors, '\0', MAX_LEN);
     retval = 0;
 
+    /* look for start room */
     if (!input) {
 	for (i = 0; i < NUM_ROOMS; i++) {
 	    if (strstr(START_TYPE, rooms[i].type)) {
 		strcpy(room_name, rooms[i].name);
+		/* load connectors */
 		for (j = 0; j < rooms[i].num_connections; j++) {
 		    strcat(connectors, rooms[i].connected_rooms[j]);
 		    strcat(connectors, ", ");
 		}
+		/* no need to keep looking */
 		break;
 	    }
 	}
     } else {
+	/* same basic loop as above just diff search criterion */
 	for (i = 0; i < NUM_ROOMS; i++) {
 	    if (strstr(input, rooms[i].name)) {
 		strcpy(room_name, rooms[i].name);
@@ -213,28 +252,30 @@ int get_room_details(char* input, char* room_name, char* connectors) {
 	    }
 	}
     }
+    /* make sure punctuation is correct */
     i = strlen(connectors) - 2;
     connectors[i] = '.';
     return retval;
 }
 
 /*
-   get starting room details
-   while(game_not_over)
-   display room and connectors
-   prompt
-   get user input
-   if input == time
-   show time
-   else if input == connecting room
-   get room details
-   if room is end
-   show winning message, #steps, path
-   end game
-   else
-   steps++, append room to path
-   else
-   show huh msg
+ * void play_game()
+ * game play loop: get starting room details and:
+   while the user hasn't found the end room
+     display room and connectors
+     prompt and get user input
+     if input == time
+       wake up the thread and show time
+     else if input == connecting room
+       get room details
+       if this room is end
+         show winning message, #steps, path
+         end game
+       else
+         steps++, append room to path
+     else
+       show huh msg
+     back to while
    */
 void play_game() {
     int num_chars, steps, game_over, room_type, tnum;
@@ -250,13 +291,15 @@ void play_game() {
     game_over = 0; 
     memset(path, '\0', MAX_LEN);
 
+    /* enable lock and create the thread */
     pthread_mutex_lock(&lock);
     tnum = pthread_create(&mythread, NULL, set_time, NULL);
     assert(tnum == 0);
 
+    /* start room details */
     room_type = get_room_details(0, room_name, connectors);
     while (!game_over) {
-
+	/* construct the 1st 2 lines */
 	memset(output, '\0', MAX_LEN);
 	strcat(output, PROMPT1);
 	strcat(output, room_name);
@@ -266,12 +309,13 @@ void play_game() {
 	strcat(output, connectors);
 	printf("%s\n", output);
 
+	/* get user input */
 	printf("WHERE TO? >");
 	num_chars = getline(&input, &buf_size, stdin);
 	input[num_chars-1] = '\0';
-	/* printf("you entered: %s\n", input); */
 	printf("\n");
 
+	/* did the user enter a valid connector? */
 	if (strstr(connectors, input)) {
 	    room_type = get_room_details(input, room_name, connectors);
 	    steps++;
@@ -279,27 +323,36 @@ void play_game() {
 	    strcat(path, "\n");
 	    if (room_type == 1) {
 		printf("YOU HAVE FOUND THE END ROOM. CONGRATULATIONS!\n");
+		/* kinda anal, but it's a bad habit from rails... */
 		printf("YOU TOOK %d %s. YOUR PATH TO VICTORY WAS:\n", steps, steps==1?"STEP":"STEPS");
 		printf("%s", path);
 		game_over = 1;
 	    }
 	} else if (strcmp(input, "time") == 0) {
+	    /* unlock the mutex, release the thread to set the time */
+	    /* whilst pausing main thread game play */
 	    pthread_mutex_unlock(&lock);
 	    pthread_join(mythread, NULL);
 	    pthread_mutex_lock(&lock);
 	    tnum = pthread_create(&mythread, NULL, set_time, NULL);
 	    assert(tnum == 0);
+	    /* read the file created by mythread */
 	    get_time();
 	} else {
 	    printf("HUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN.\n\n");
 	}
     }
 
+    /* cleanup, ready for reuse */
     free(input);
     input = NULL;
 }
 
-/* write time to a file */
+/* 
+ * void *set_time()
+ * allow a thread exclusive use of resources to write time, in the proper format,
+ * to a file. uses the higher level c file functions (a lot more convenient)
+ */
 void *set_time() {
     pthread_mutex_lock(&lock);
     int i;
@@ -308,11 +361,14 @@ void *set_time() {
     char buf[80];
     memset(buf, '\0', 80);
 
+    /* get the datetime */
     time (&rawtime);
     timeinfo = localtime (&rawtime);
 
+    /* format the info in the tm struct */
     strftime (buf, 80, "%l:%M%p, %A, %B %e, %G", timeinfo);
 
+    /* get rid of the leading space if hour is 1 digit from the %l flag */
     i = 0;
     if (buf[0] == ' ') {
 	while (buf[i]) {
@@ -322,6 +378,7 @@ void *set_time() {
     }
     buf[i] = '\0';
 
+    /* lower case the AM/PM from the %p flag */
     i = 0;
     while (buf[i]) {
 	if (i < 8 && (buf[i] == 'A' || buf[i] == 'P' || buf[i] == 'M'))
@@ -329,6 +386,7 @@ void *set_time() {
 	i++;
     }
 
+    /* write the datetime to a file */
     FILE *fout = fopen(TIME_FILE, "w");
     fprintf(fout, "%s\n", buf);
     pthread_mutex_unlock(&lock);
@@ -337,6 +395,10 @@ void *set_time() {
     return NULL;
 }
 
+/*
+ * void cleanup()
+ * free all memory allocated on the heap
+ */
 void cleanup() {
     int i, j;
     for (i = 0; i < NUM_ROOMS; i++) {
@@ -349,6 +411,12 @@ void cleanup() {
     pthread_mutex_destroy(&lock);
 }
 
+/*
+ * void get_time()
+ * main thread reads file and copies contents into a buffer that is read to
+ * stdout. it breaks the metaphor by printing output outside of the game play
+ * loop but seems cleaner to do this way. uses the high-level c file functions
+ */
 void get_time() {
     FILE *fin;
     char timestr[MAX_LEN];
