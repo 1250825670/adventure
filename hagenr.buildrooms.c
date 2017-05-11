@@ -1,7 +1,7 @@
 /*
  * author: ron hagen, cs 344-400
  * program2: hagenr.buildrooms.c
- * description: creates an array of 7 room struts with randomly assigned names,
+ * description: creates an array of 7 room structs with randomly assigned names,
  * randomly assigned room types, and a random number of inter-room
  * connections. a new directory is created with the prefix "hagenr.rooms." and
  * a suffix of the PID. then each struct is written to a separate file. only 
