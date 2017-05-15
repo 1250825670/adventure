@@ -340,11 +340,10 @@ void play_game() {
 	} else {
 	    printf("HUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN.\n\n");
 	}
+	/* cleanup, ready for reuse */
+	free(input);
+	input = NULL;
     }
-
-    /* cleanup, ready for reuse */
-    free(input);
-    input = NULL;
 }
 
 /* 
